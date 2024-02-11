@@ -2,7 +2,6 @@
 #include <qspiPsDriver/qspiPsDriverDefs.hpp>
 #include <ScuGicDriver/ScuGicDriver.hpp>
 #include <xqspips.h> // Include Xilinx QSPI driver API
-#include <portmacro.h>
 #include <FreeRTOS.h>
 #include <semphr.h>
 

@@ -6,7 +6,7 @@ XQspiPs 			ZynqQspiDriver::QspiInstance;
 XQspiPs_Config* 	ZynqQspiDriver::QspiConfig;
 bool 				ZynqQspiDriver::TransferInProgress;
 SemaphoreHandle_t	ZynqQspiDriver::xQspiSemaphore;
-
+uint8_t				ZynqQspiDriver::WriteBuffer[ADDRESS_3_OFFSET];
 ZynqQspiDriver::ZynqQspiDriver() {
     // Constructor implementation can be empty if there's nothing to initialize beforehand
 }
@@ -384,6 +384,8 @@ uint32_t ZynqQspiDriver::writePage(uint32_t Address, uint8_t* p_data, uint32_t B
 	 */
 //	TransferInProgress = TRUE;
 	XQspiPs_Transfer(&QspiInstance, WriteBuffer, NULL, OVERHEAD_SIZE);
+
+	xSemaphoreTake(xQspiSemaphore, portMAX_DELAY);
 
 	XQspiPs_Transfer(&QspiInstance, p_data, NULL, ByteCount);
 
