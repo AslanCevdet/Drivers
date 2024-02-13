@@ -181,7 +181,6 @@ uint32_t ZynqQspiDriver::erase(uint32_t Address, size_t ByteCount) {
 	 * sector erase command
 	 */
 
-//	for (Sector = 0; ( Sector < ((ByteCount / SECTOR_SIZE) + 1) ); Sector++) {
 	while( ByteCount > SECTOR_SIZE ) {
 		/*
 		 * Send the write enable command to the SEEPOM so that it can be
@@ -204,6 +203,14 @@ uint32_t ZynqQspiDriver::erase(uint32_t Address, size_t ByteCount) {
 		 * Setup the write command with the specified address and data
 		 * for the FLASH
 		 */
+		if(Address % SUBSECTOR_SIZE != 0)
+		{
+			WriteBuffer[COMMAND_OFFSET]   = XQSPIPS_FLASH_OPCODE_BE_4K;
+		}
+		else
+		{
+			WriteBuffer[COMMAND_OFFSET]   = XQSPIPS_FLASH_OPCODE_SE;
+		}
 		WriteBuffer[COMMAND_OFFSET]   = XQSPIPS_FLASH_OPCODE_SE;
 		WriteBuffer[ADDRESS_1_OFFSET] = (u8)(Address >> 16);
 		WriteBuffer[ADDRESS_2_OFFSET] = (u8)(Address >> 8);
@@ -255,8 +262,16 @@ uint32_t ZynqQspiDriver::erase(uint32_t Address, size_t ByteCount) {
 			}
 		}
 
-		Address += SECTOR_SIZE;
-		ByteCount -= SECTOR_SIZE;
+		if(Address % SUBSECTOR_SIZE != 0)
+		{
+			Address += SUBSECTOR_SIZE;
+			ByteCount -= SUBSECTOR_SIZE;
+		}
+		else
+		{
+			Address += SECTOR_SIZE;
+			ByteCount -= SECTOR_SIZE;
+		}
 	}
 
 	while( ByteCount > SUBSECTOR_SIZE ) {
@@ -444,6 +459,7 @@ void ZynqQspiDriver::QspiHandler(void *CallBackRef, u32 StatusEvent, unsigned in
 	xSemaphoreGiveFromISR(xQspiSemaphore, &xHigherPriorityTaskWoken);
 //	TransferInProgress = FALSE;
 
+	portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 	/* If the event was not transfer done, then track it as an error*/
 	if (StatusEvent != XST_SPI_TRANSFER_DONE) {
 //		Error++;
